@@ -1,0 +1,17 @@
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:#111;color:#eee}
+header,footer{padding:12px 16px;background:#222;position:sticky;top:0}
+h1,h2{margin:8px 0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px}
+.card{border:1px solid #444;border-radius:8px;padding:8px;background:#1a1a1a}
+button{border:none;border-radius:8px;padding:12px 14px;margin:4px 0;font-size:16px}
+button.primary{background:#0a84ff;color:#fff}
+button:active{transform:scale(0.98)}
+.muted{opacity:.8;font-size:.9rem}
+#cart{position:sticky;bottom:0;background:#161616;padding:8px;border-top:1px solid #333}
+#cartItems{list-style:none;margin:0;padding:0;max-height:30vh;overflow:auto}
+#categories{display:flex;gap:8px;overflow:auto;padding:4px}
+.tab{padding:6px 10px;border-radius:16px;border:1px solid #444;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{background:#0a84ff;color:#fff}
+.hc body{background:#000;color:#fff}
+.large-touch button{min-height:48px;min-width:48px}
