@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="manifest" href="/static/table/manifest.json">
+  <title>NorenQR — Table</title>
+  <link rel="stylesheet" href="/static/table/styles.css">
+</head>
+<body class="hc">
+  <header>
+    <h1 aria-live="polite">Welcome</h1>
+    <div id="tableName" class="muted"></div>
+  </header>
+  <main>
+    <section id="menu">
+      <h2>Menu</h2>
+      <div id="categories" role="tablist" aria-label="Categories"></div>
+      <div id="items" class="grid"></div>
+    </section>
+    <section id="cart" aria-label="Cart">
+      <h2>Cart</h2>
+      <ul id="cartItems"></ul>
+      <button id="submitBtn" class="primary">Submit to kitchen</button>
+      <div id="cartStatus" role="status" aria-live="polite"></div>
+    </section>
+  </main>
+  <footer>
+    <button id="hcToggle" aria-pressed="true">High contrast</button>
+  </footer>
+
+  <script src="/static/table/app.js" defer></script>
+</body>
+</html>
