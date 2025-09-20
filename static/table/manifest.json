@@ -1,0 +1,9 @@
+{
+  "name": "NorenQR",
+  "short_name": "NorenQR",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#111",
+  "theme_color": "#0a84ff",
+  "icons": []
+}
