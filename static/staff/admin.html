@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>NorenQR — Admin</title>
+  <link rel="stylesheet" href="/static/staff/styles.css">
+</head>
+<body>
+  <header><h1>Admin</h1></header>
+  <main>
+    <section>
+      <h2>Create Category</h2>
+      <form id="catForm" action="javascript:void(0)">
+        <label>Title (en) <input name="title_en"></label>
+        <label>Title (ja) <input name="title_ja"></label>
+        <button type="submit">Create</button>
+      </form>
+    </section>
+    <section>
+      <h2>Create Item</h2>
+      <form id="itemForm" action="javascript:void(0)">
+        <label>Title (en) <input name="title_en"></label>
+        <label>Price <input name="price" type="number" step="0.01"></label>
+        <button type="submit">Create</button>
+      </form>
+    </section>
+    <section>
+      <h2>Upload Image</h2>
+      <form id="imgForm" action="javascript:void(0)">
+        <input type="file" name="file" accept="image/*">
+        <button type="submit">Upload</button>
+      </form>
+      <div id="imgResult"></div>
+    </section>
+  </main>
+  <script src="/static/staff/admin.js"></script>
+</body>
+</html>
