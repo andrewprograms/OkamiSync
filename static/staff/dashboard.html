@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>NorenQR — Staff</title>
+  <link rel="stylesheet" href="/static/staff/styles.css">
+</head>
+<body>
+  <header><h1>Kitchen Queue</h1><div id="auth"></div></header>
+  <main>
+    <section id="login">
+      <h2>Sign in</h2>
+      <form id="loginForm" action="javascript:void(0)">
+        <label>Username <input name="username" required></label>
+        <label>Password <input type="password" name="password" required></label>
+        <button type="submit">Sign in</button>
+      </form>
+      <div id="loginMsg"></div>
+    </section>
+    <section id="queue" hidden>
+      <div class="toolbar">
+        <select id="filterState">
+          <option value="">All</option>
+          <option>submitted</option><option>accepted</option><option>ready</option><option>served</option><option>voided</option>
+        </select>
+        <button id="refreshBtn">Refresh</button>
+      </div>
+      <div id="orders"></div>
+    </section>
+  </main>
+  <audio id="ding" preload="auto">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
+  </audio>
+  <script src="/static/staff/staff.js"></script>
+</body>
+</html>
