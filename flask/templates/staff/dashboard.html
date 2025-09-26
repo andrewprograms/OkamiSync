@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %} - Staff{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-2">
+  <h5 class="mb-0">Staff Dashboard</h5>
+  <span class="badge bg-warning text-dark">Kitchen Live</span>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-8">
+    <div id="orders-board" class="row g-3"></div>
+  </div>
+  <div class="col-12 col-lg-4">
+    <div class="card">
+      <div class="card-body">
+        <h6 class="mb-2">Stats (last 50)</h6>
+        <canvas id="statsChart" height="180"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/staff.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,10 @@
+/* Mobile-first diner tweaks */
+@media (min-width: 768px) {
+  .menu-card img { height: 160px; }
+}
+
+/* Staff cards */
+.order-card .badge { font-size: 0.85rem; }
+
+/* Utility */
+.small-muted { font-size: 0.875rem; color: #6c757d; }

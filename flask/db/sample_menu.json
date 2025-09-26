@@ -1,0 +1,19 @@
+{
+  "tables": [
+    {"code": "A1", "label": "Table A"},
+    {"code": "B2", "label": "Table B"}
+  ],
+  "categories": [
+    {"name": "Starters", "sort_order": 1},
+    {"name": "Mains", "sort_order": 2},
+    {"name": "Drinks", "sort_order": 3}
+  ],
+  "items": [
+    {"category": "Starters", "name": "Garlic Bread", "description": "Toasted with herbs.", "price_cents": 500},
+    {"category": "Starters", "name": "Bruschetta", "description": "Tomatoes, basil, olive oil.", "price_cents": 650},
+    {"category": "Mains", "name": "Margherita Pizza", "description": "Classic tomato & mozzarella.", "price_cents": 1200},
+    {"category": "Mains", "name": "Spaghetti Bolognese", "description": "Rich meat sauce.", "price_cents": 1300},
+    {"category": "Drinks", "name": "Cola", "description": "Chilled can.", "price_cents": 300},
+    {"category": "Drinks", "name": "Sparkling Water", "description": "250ml bottle.", "price_cents": 250}
+  ]
+}
