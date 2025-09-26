@@ -110,7 +110,9 @@ def _resolve_database_url():
         host = _get_any(
             ["LOCAL_SQL_HOST", "MYSQL_HOST", "DB_HOST", "local-sql-host"], "127.0.0.1"
         )
-        port = _get_any(["LOCAL_SQL_PORT", "MYSQL_PORT", "DB_PORT", "local-sql-port"], "3306")
+        port = _get_any(
+            ["LOCAL_SQL_PORT", "MYSQL_PORT", "DB_PORT", "local-sql-port"], "3306"
+        )
         dbname = _get_any(
             [
                 "LOCAL_SQL_DB",
@@ -125,14 +127,35 @@ def _resolve_database_url():
         return _compose_mysql_url(user, password, host, port, dbname)
 
     # production / default path (PythonAnywhere etc.)
-    user = _get_any(["PA_SQL_USER", "PA_MYSQL_USER", "MYSQL_USER", "pa-mysql-user", "DB_USER"])
-    password = _get_any(
-        ["PA_SQL_PASSWORD", "PA_MYSQL_PASSWORD", "MYSQL_PASSWORD", "pa-mysql-password", "DB_PASSWORD"]
+    user = _get_any(
+        ["PA_SQL_USER", "PA_MYSQL_USER", "MYSQL_USER", "pa-mysql-user", "DB_USER"]
     )
-    host = _get_any(["PA_SQL_HOST", "PA_MYSQL_HOST", "MYSQL_HOST", "pa-mysql-host", "DB_HOST"])
-    port = _get_any(["PA_SQL_PORT", "PA_MYSQL_PORT", "MYSQL_PORT", "pa-mysql-port", "DB_PORT"], "3306")
+    password = _get_any(
+        [
+            "PA_SQL_PASSWORD",
+            "PA_MYSQL_PASSWORD",
+            "MYSQL_PASSWORD",
+            "pa-mysql-password",
+            "DB_PASSWORD",
+        ]
+    )
+    host = _get_any(
+        ["PA_SQL_HOST", "PA_MYSQL_HOST", "MYSQL_HOST", "pa-mysql-host", "DB_HOST"]
+    )
+    port = _get_any(
+        ["PA_SQL_PORT", "PA_MYSQL_PORT", "MYSQL_PORT", "pa-mysql-port", "DB_PORT"],
+        "3306",
+    )
     dbname = _get_any(
-        ["PA_SQL_DB", "PA_MYSQL_DB", "MYSQL_DB", "MYSQL_DATABASE", "pa-mysql-db", "pa-mysql-database", "DB_NAME"]
+        [
+            "PA_SQL_DB",
+            "PA_MYSQL_DB",
+            "MYSQL_DB",
+            "MYSQL_DATABASE",
+            "pa-mysql-db",
+            "pa-mysql-database",
+            "DB_NAME",
+        ]
     )
     return _compose_mysql_url(user, password, host, port, dbname)
 
