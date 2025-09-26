@@ -1,6 +1,7 @@
 import os
 import logging
 from logging.handlers import RotatingFileHandler
+from urllib.parse import quote_plus
 
 from flask import Flask, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
@@ -15,6 +16,10 @@ _DOTENV_MAP = dotenv_values(find_dotenv()) or {}
 db = SQLAlchemy()
 login_manager = LoginManager()
 socketio = SocketIO(async_mode="eventlet", cors_allowed_origins="*")  # dev-friendly
+
+
+def _truthy(v) -> bool:
+    return str(v).strip().lower() in {"1", "true", "yes", "y", "on"}
 
 
 def _get_any(keys, default=None):
@@ -44,27 +49,36 @@ def _get_any(keys, default=None):
 
 
 def _compose_mysql_url(user, password, host, port, dbname):
+    """
+    Compose a safe SQLAlchemy URL for PyMySQL. We URL-encode user, password and dbname
+    so special characters like @ : / # don't break parsing.
+    """
     if not (user and password and host and dbname):
         return None
     port = str(port or "3306")
-    return f"mysql+pymysql://{user}:{password}@{host}:{port}/{dbname}?charset=utf8mb4"
+    user_q = quote_plus(str(user))
+    pass_q = quote_plus(str(password))
+    db_q = quote_plus(str(dbname))
+    return f"mysql+pymysql://{user_q}:{pass_q}@{host}:{port}/{db_q}?charset=utf8mb4"
 
 
 def _resolve_database_url():
     """
     Resolution priority:
-      1) DATABASE_URL (explicit override)
-      2) FLASK_ENV=development  -> compose from LOCAL_* (with hyphen aliases)
-      3) FLASK_ENV!=development -> compose from PA_*    (with hyphen aliases)
-    Supported aliases (examples):
-      - LOCAL_SQL_USER or local-sql-user-name
-      - LOCAL_SQL_PASSWORD or local-sql-user-password (or local-sql-password)
-      - PA_SQL_USER or pa-mysql-user (or PA_MYSQL_USER)
-      - PA_SQL_PASSWORD or pa-mysql-password (or PA_MYSQL_PASSWORD)
-      - PA_SQL_DB or pa-mysql-db (or PA_MYSQL_DB)
+      1) DATABASE_URL / MYSQL_URL / SQLALCHEMY_DATABASE_URI (explicit override)
+      2) FLASK_ENV=development  -> compose from LOCAL_* (with hyphen aliases + common synonyms)
+      3) FLASK_ENV!=development -> compose from PA_*    (with hyphen aliases + common synonyms)
+
+    Supported synonyms (examples):
+      - LOCAL_SQL_USER, MYSQL_USER, DB_USER
+      - LOCAL_SQL_PASSWORD, MYSQL_PASSWORD, DB_PASSWORD
+      - LOCAL_SQL_DB, MYSQL_DB / MYSQL_DATABASE, DB_NAME
+      - LOCAL_SQL_HOST, MYSQL_HOST, DB_HOST
+      - LOCAL_SQL_PORT, MYSQL_PORT, DB_PORT
+      - production: PA_SQL_* / PA_MYSQL_* / MYSQL_* / DB_*
     """
     # 1) Explicit override wins
-    explicit = _get_any(["DATABASE_URL"])
+    explicit = _get_any(["DATABASE_URL", "MYSQL_URL", "SQLALCHEMY_DATABASE_URI"])
     if explicit:
         return explicit
 
@@ -76,6 +90,8 @@ def _resolve_database_url():
                 "LOCAL_SQL_USER",
                 "LOCAL_DB_USER",
                 "APP_DB_USER",
+                "MYSQL_USER",
+                "DB_USER",
                 "local-sql-user-name",
                 "local-sql-username",
             ]
@@ -85,23 +101,39 @@ def _resolve_database_url():
                 "LOCAL_SQL_PASSWORD",
                 "LOCAL_DB_PASSWORD",
                 "APP_DB_PASSWORD",
+                "MYSQL_PASSWORD",
+                "DB_PASSWORD",
                 "local-sql-user-password",
                 "local-sql-password",
             ]
         )
-        host = _get_any(["LOCAL_SQL_HOST", "local-sql-host"], "127.0.0.1")
-        port = _get_any(["LOCAL_SQL_PORT", "local-sql-port"], "3306")
+        host = _get_any(
+            ["LOCAL_SQL_HOST", "MYSQL_HOST", "DB_HOST", "local-sql-host"], "127.0.0.1"
+        )
+        port = _get_any(["LOCAL_SQL_PORT", "MYSQL_PORT", "DB_PORT", "local-sql-port"], "3306")
         dbname = _get_any(
-            ["LOCAL_SQL_DB", "LOCAL_DB_NAME", "local-sql-db", "local-sql-database-name"]
+            [
+                "LOCAL_SQL_DB",
+                "LOCAL_DB_NAME",
+                "MYSQL_DB",
+                "MYSQL_DATABASE",
+                "DB_NAME",
+                "local-sql-db",
+                "local-sql-database-name",
+            ]
         )
         return _compose_mysql_url(user, password, host, port, dbname)
 
     # production / default path (PythonAnywhere etc.)
-    user = _get_any(["PA_SQL_USER", "PA_MYSQL_USER", "pa-mysql-user"])
-    password = _get_any(["PA_SQL_PASSWORD", "PA_MYSQL_PASSWORD", "pa-mysql-password"])
-    host = _get_any(["PA_SQL_HOST", "PA_MYSQL_HOST", "pa-mysql-host"])
-    port = _get_any(["PA_SQL_PORT", "PA_MYSQL_PORT", "pa-mysql-port"], "3306")
-    dbname = _get_any(["PA_SQL_DB", "PA_MYSQL_DB", "pa-mysql-db", "pa-mysql-database"])
+    user = _get_any(["PA_SQL_USER", "PA_MYSQL_USER", "MYSQL_USER", "pa-mysql-user", "DB_USER"])
+    password = _get_any(
+        ["PA_SQL_PASSWORD", "PA_MYSQL_PASSWORD", "MYSQL_PASSWORD", "pa-mysql-password", "DB_PASSWORD"]
+    )
+    host = _get_any(["PA_SQL_HOST", "PA_MYSQL_HOST", "MYSQL_HOST", "pa-mysql-host", "DB_HOST"])
+    port = _get_any(["PA_SQL_PORT", "PA_MYSQL_PORT", "MYSQL_PORT", "pa-mysql-port", "DB_PORT"], "3306")
+    dbname = _get_any(
+        ["PA_SQL_DB", "PA_MYSQL_DB", "MYSQL_DB", "MYSQL_DATABASE", "pa-mysql-db", "pa-mysql-database", "DB_NAME"]
+    )
     return _compose_mysql_url(user, password, host, port, dbname)
 
 
@@ -158,8 +190,10 @@ def create_app():
         OrderItem,
     )  # noqa
 
-    with app.app_context():
-        db.create_all()
+    # Optionally create tables on boot (can be disabled for tooling)
+    if _truthy(_get_any(["AUTO_CREATE_TABLES"], "1")):
+        with app.app_context():
+            db.create_all()
 
     # Blueprints
     from app.bp.auth import bp as auth_bp
@@ -200,6 +234,8 @@ def create_app():
                         "LOCAL_SQL_PASSWORD",
                         "local-sql-user-password",
                         "local-sql-password",
+                        "MYSQL_PASSWORD",
+                        "DB_PASSWORD",
                     ]
                 ),
                 _get_any(["PA_SQL_PASSWORD", "PA_MYSQL_PASSWORD", "pa-mysql-password"]),
