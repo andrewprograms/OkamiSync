@@ -6,9 +6,9 @@ from flask import Flask, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_socketio import SocketIO
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
-load_dotenv()
+load_dotenv(find_dotenv())
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -17,7 +17,13 @@ socketio = SocketIO(async_mode='eventlet', cors_allowed_origins="*")  # dev-frie
 def create_app():
     app = Flask(__name__, static_folder='static', template_folder='../templates')
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+    db_url = os.getenv('DATABASE_URL')
+    if not db_url:
+        raise RuntimeError(
+            "DATABASE_URL is not set. Ensure your .env has a valid MySQL DSN "
+            "(e.g., mysql+pymysql://user:pass@host/dbname?charset=utf8mb4)."
+        )
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_DIR', 'app/static/data/img')
 

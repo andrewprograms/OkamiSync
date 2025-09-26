@@ -1,8 +1,8 @@
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from app import create_app, socketio
 
-load_dotenv()
+load_dotenv(find_dotenv())
 
 app = create_app()
 
