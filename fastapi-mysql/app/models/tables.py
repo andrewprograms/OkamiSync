@@ -1,0 +1,21 @@
+DDL = [
+    """
+    CREATE TABLE IF NOT EXISTS tables (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(64) NOT NULL UNIQUE,
+      opaque_uid VARCHAR(64) NOT NULL UNIQUE,
+      active TINYINT(1) NOT NULL DEFAULT 1,
+      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    """
+    ,
+    """
+    CREATE TABLE IF NOT EXISTS table_sessions (
+      id CHAR(36) PRIMARY KEY,
+      table_id INT NOT NULL,
+      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+      last_seen_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      KEY idx_ts_table (table_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    """
+]

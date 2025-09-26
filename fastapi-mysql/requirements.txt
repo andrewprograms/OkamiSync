@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pymysql
+anyio
+redis>=4
+slowapi
+itsdangerous
+passlib[bcrypt]
+pydantic
+Pillow
