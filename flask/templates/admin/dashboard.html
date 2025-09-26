@@ -1,12 +1,14 @@
 {% extends "base.html" %}
 {% block title %} - Admin{% endblock %}
 {% block content %}
-<h5>Admin — Menu & Tables</h5>
+<h5 class="mb-3"><i class="bi bi-gear me-2"></i>Admin — Menu & Tables</h5>
+
 <div class="row g-3">
+  <!-- Categories -->
   <div class="col-12 col-xl-6">
     <div class="card">
       <div class="card-body">
-        <h6>Categories</h6>
+        <h6 class="mb-3"><i class="bi bi-tags me-2"></i>Categories</h6>
         <ul class="list-group mb-3" id="cat-list">
           {% for c in categories %}
           <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -16,69 +18,147 @@
           {% endfor %}
         </ul>
         <form id="form-add-cat" class="row g-2">
-          <div class="col-6"><input class="form-control" name="name" placeholder="New category" required></div>
-          <div class="col-3"><input class="form-control" name="sort_order" type="number" value="0"></div>
-          <div class="col-3"><button class="btn btn-primary w-100">Add</button></div>
+          <div class="col-6">
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-tag"></i></span>
+              <input class="form-control" name="name" placeholder="New category" required>
+            </div>
+          </div>
+          <div class="col-3">
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-sort-numeric-down"></i></span>
+              <input class="form-control" name="sort_order" type="number" value="0">
+            </div>
+          </div>
+          <div class="col-3"><button class="btn btn-primary w-100"><i class="bi bi-plus-lg me-1"></i>Add</button></div>
         </form>
       </div>
     </div>
   </div>
+
+  <!-- Items -->
   <div class="col-12 col-xl-6">
     <div class="card">
       <div class="card-body">
-        <h6>Menu Items</h6>
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <h6 class="mb-0"><i class="bi bi-basket2 me-2"></i>Menu Items</h6>
+          <div class="input-group input-group-sm" style="max-width: 260px;">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input id="item-search" type="search" class="form-control" placeholder="Search items...">
+          </div>
+        </div>
+
         <div id="item-list" class="list-group" style="max-height: 400px; overflow:auto;">
           {% for i in items %}
-          <div class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-              <strong>{{ i.name }}</strong>
-              <div class="small text-muted">{{ i.category.name }} — ${{ '%.2f'|(i.price_cents/100) }}</div>
+          <div class="list-group-item d-flex justify-content-between align-items-center gap-3"
+            data-search="{{ i.name }} {{ i.category.name }}">
+            <div class="d-flex align-items-center gap-3">
+              {% if i.image_url %}
+              <img src="{{ i.image_url }}" alt="" width="48" height="48" style="object-fit:cover;border-radius:8px;">
+              {% else %}
+              <div class="d-flex align-items-center justify-content-center bg-body-secondary"
+                style="width:48px;height:48px;border-radius:8px;">
+                <i class="bi bi-image text-muted"></i>
+              </div>
+              {% endif %}
+              <div>
+                <strong>{{ i.name }}</strong>
+                <div class="small text-muted">{{ i.category.name }} — ${{ '%.2f'|(i.price_cents/100) }}</div>
+              </div>
             </div>
-            <span class="badge bg-{{ 'success' if i.is_active else 'secondary' }}">{{ 'Active' if i.is_active else 'Hidden' }}</span>
+            <span class="badge bg-{{ 'success' if i.is_active else 'secondary' }}">{{ 'Active' if i.is_active else
+              'Hidden' }}</span>
           </div>
           {% endfor %}
         </div>
 
-        <hr/>
-        <h6 class="mt-2">Quick Add Item</h6>
+        <hr />
+        <h6 class="mt-2"><i class="bi bi-plus-circle me-2"></i>Quick Add Item</h6>
         <form id="form-add-item" class="row g-2">
           <div class="col-6">
-            <select class="form-select" name="category_id" required>
-              {% for c in categories %}
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-folder2-open"></i></span>
+              <select class="form-select" name="category_id" required>
+                {% for c in categories %}
                 <option value="{{ c.id }}">{{ c.name }}</option>
-              {% endfor %}
-            </select>
+                {% endfor %}
+              </select>
+            </div>
           </div>
-          <div class="col-6"><input class="form-control" name="name" placeholder="Name" required></div>
-          <div class="col-12"><input class="form-control" name="description" placeholder="Description"></div>
-          <div class="col-4"><input class="form-control" name="price_cents" type="number" placeholder="Price cents" required></div>
-          <div class="col-8"><input class="form-control" name="image_url" placeholder="Image URL (optional)"></div>
-          <div class="col-12"><button class="btn btn-primary">Add Item</button></div>
+          <div class="col-6">
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-type"></i></span>
+              <input class="form-control" name="name" placeholder="Name" required>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+              <input class="form-control" name="description" placeholder="Description">
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+              <input class="form-control" name="price_cents" type="number" placeholder="Price cents" required>
+            </div>
+          </div>
+          <div class="col-8">
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-image"></i></span>
+              <input class="form-control" name="image_url" placeholder="Image URL (optional)">
+            </div>
+          </div>
+          <div class="col-12"><button class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Add Item</button></div>
         </form>
       </div>
     </div>
   </div>
 </div>
 
+<!-- Tables & QR -->
 <div class="card mt-3">
   <div class="card-body">
-    <h6>Tables & QR</h6>
+    <h6 class="mb-2"><i class="bi bi-qr-code me-2"></i>Tables & QR</h6>
     <div class="row g-2 align-items-end">
-      <div class="col-3"><input class="form-control" id="table-code" placeholder="Code (e.g. C3)"></div>
-      <div class="col-5"><input class="form-control" id="table-label" placeholder="Label (e.g. Table C)"></div>
-      <div class="col-4"><button id="btn-add-table" class="btn btn-primary w-100">Create Table</button></div>
+      <div class="col-3">
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-upc-scan"></i></span>
+          <input class="form-control" id="table-code" placeholder="Code (e.g. C3)">
+        </div>
+      </div>
+      <div class="col-5">
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-table"></i></span>
+          <input class="form-control" id="table-label" placeholder="Label (e.g. Table C)">
+        </div>
+      </div>
+      <div class="col-4"><button id="btn-add-table" class="btn btn-primary w-100"><i
+            class="bi bi-plus-lg me-1"></i>Create Table</button></div>
     </div>
+
     <div class="row g-2 mt-3" id="table-list">
       {% for t in tables %}
       <div class="col-12 col-md-6 col-lg-4">
         <div class="card">
           <div class="card-body">
-            <div class="d-flex justify-content-between">
+            <div class="d-flex justify-content-between align-items-center">
               <strong>{{ t.label }}</strong>
               <span class="text-muted">{{ t.code }}</span>
             </div>
-            <img class="img-fluid mt-2" src="/admin/qr/{{ t.code }}.png" alt="QR">
-            <a class="btn btn-sm btn-outline-secondary mt-2" href="/t/{{ t.code }}" target="_blank">Open</a>
+            <img class="img-fluid mt-2 rounded" src="/admin/qr/{{ t.code }}.png" alt="QR">
+            <div class="d-flex gap-2 mt-2">
+              <a class="btn btn-sm btn-outline-secondary" href="/t/{{ t.code }}" target="_blank">
+                <i class="bi bi-box-arrow-up-right me-1"></i>Open
+              </a>
+              <button class="btn btn-sm btn-outline-primary btn-copy-link"
+                data-link="{{ request.host_url ~ 't/' ~ t.code }}">
+                <i class="bi bi-link-45deg me-1"></i>Copy Link
+              </button>
+              <a class="btn btn-sm btn-outline-success" href="/admin/qr/{{ t.code }}.png" download="{{ t.code }}.png">
+                <i class="bi bi-download me-1"></i>Download QR
+              </a>
+            </div>
           </div>
         </div>
       </div>

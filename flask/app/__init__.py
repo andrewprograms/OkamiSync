@@ -6,50 +6,157 @@ from flask import Flask, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_socketio import SocketIO
-from dotenv import load_dotenv, find_dotenv
+from dotenv import load_dotenv, find_dotenv, dotenv_values
 
+# Load .env from project root even if launched elsewhere
 load_dotenv(find_dotenv())
+_DOTENV_MAP = dotenv_values(find_dotenv()) or {}
 
 db = SQLAlchemy()
 login_manager = LoginManager()
-socketio = SocketIO(async_mode='eventlet', cors_allowed_origins="*")  # dev-friendly
+socketio = SocketIO(async_mode="eventlet", cors_allowed_origins="*")  # dev-friendly
+
+
+def _get_any(keys, default=None):
+    """
+    Return the first non-empty value from os.environ or .env (supports hyphenated keys).
+    Example: _get_any(['LOCAL_SQL_USER', 'local-sql-user-name'])
+    """
+    for key in keys:
+        val = os.getenv(key)
+        if val:
+            return val
+        # fallback to .env map (supports keys that aren't valid env var names, e.g. with '-')
+        if key in _DOTENV_MAP and _DOTENV_MAP[key]:
+            return _DOTENV_MAP[key]
+        # try underscore <-> hyphen swap for robustness
+        if "-" in key:
+            alt = key.replace("-", "_")
+            val = os.getenv(alt) or _DOTENV_MAP.get(alt)
+            if val:
+                return val
+        if "_" in key:
+            alt = key.replace("_", "-")
+            val = os.getenv(alt) or _DOTENV_MAP.get(alt)
+            if val:
+                return val
+    return default
+
+
+def _compose_mysql_url(user, password, host, port, dbname):
+    if not (user and password and host and dbname):
+        return None
+    port = str(port or "3306")
+    return f"mysql+pymysql://{user}:{password}@{host}:{port}/{dbname}?charset=utf8mb4"
+
+
+def _resolve_database_url():
+    """
+    Resolution priority:
+      1) DATABASE_URL (explicit override)
+      2) FLASK_ENV=development  -> compose from LOCAL_* (with hyphen aliases)
+      3) FLASK_ENV!=development -> compose from PA_*    (with hyphen aliases)
+    Supported aliases (examples):
+      - LOCAL_SQL_USER or local-sql-user-name
+      - LOCAL_SQL_PASSWORD or local-sql-user-password (or local-sql-password)
+      - PA_SQL_USER or pa-mysql-user (or PA_MYSQL_USER)
+      - PA_SQL_PASSWORD or pa-mysql-password (or PA_MYSQL_PASSWORD)
+      - PA_SQL_DB or pa-mysql-db (or PA_MYSQL_DB)
+    """
+    # 1) Explicit override wins
+    explicit = _get_any(["DATABASE_URL"])
+    if explicit:
+        return explicit
+
+    env = (_get_any(["FLASK_ENV"], "production") or "production").lower()
+
+    if env == "development":
+        user = _get_any(
+            [
+                "LOCAL_SQL_USER",
+                "LOCAL_DB_USER",
+                "APP_DB_USER",
+                "local-sql-user-name",
+                "local-sql-username",
+            ]
+        )
+        password = _get_any(
+            [
+                "LOCAL_SQL_PASSWORD",
+                "LOCAL_DB_PASSWORD",
+                "APP_DB_PASSWORD",
+                "local-sql-user-password",
+                "local-sql-password",
+            ]
+        )
+        host = _get_any(["LOCAL_SQL_HOST", "local-sql-host"], "127.0.0.1")
+        port = _get_any(["LOCAL_SQL_PORT", "local-sql-port"], "3306")
+        dbname = _get_any(
+            ["LOCAL_SQL_DB", "LOCAL_DB_NAME", "local-sql-db", "local-sql-database-name"]
+        )
+        return _compose_mysql_url(user, password, host, port, dbname)
+
+    # production / default path (PythonAnywhere etc.)
+    user = _get_any(["PA_SQL_USER", "PA_MYSQL_USER", "pa-mysql-user"])
+    password = _get_any(["PA_SQL_PASSWORD", "PA_MYSQL_PASSWORD", "pa-mysql-password"])
+    host = _get_any(["PA_SQL_HOST", "PA_MYSQL_HOST", "pa-mysql-host"])
+    port = _get_any(["PA_SQL_PORT", "PA_MYSQL_PORT", "pa-mysql-port"], "3306")
+    dbname = _get_any(["PA_SQL_DB", "PA_MYSQL_DB", "pa-mysql-db", "pa-mysql-database"])
+    return _compose_mysql_url(user, password, host, port, dbname)
+
 
 def create_app():
-    app = Flask(__name__, static_folder='static', template_folder='../templates')
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key')
-    db_url = os.getenv('DATABASE_URL')
-    if not db_url:
-        raise RuntimeError(
-            "DATABASE_URL is not set. Ensure your .env has a valid MySQL DSN "
-            "(e.g., mysql+pymysql://user:pass@host/dbname?charset=utf8mb4)."
-        )
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_DIR', 'app/static/data/img')
+    app = Flask(__name__, static_folder="static", template_folder="../templates")
 
-    # Ensure folders
-    os.makedirs(os.getenv('LOG_DIR', 'logs'), exist_ok=True)
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    # App config
+    app.config["APP_NAME"] = _get_any(["APP_NAME"], "QR Ordering")
+    app.config["SECRET_KEY"] = _get_any(["SECRET_KEY"], "dev-key")
 
     # Logging to file
-    log_path = os.path.join(os.getenv('LOG_DIR', 'logs'), 'app.log')
+    log_dir = _get_any(["LOG_DIR"], "logs")
+    upload_dir = _get_any(["UPLOAD_DIR"], "app/static/data/img")
+    os.makedirs(log_dir, exist_ok=True)
+    os.makedirs(upload_dir, exist_ok=True)
+    log_path = os.path.join(log_dir, "app.log")
     file_handler = RotatingFileHandler(log_path, maxBytes=1_000_000, backupCount=5)
-    file_handler.setFormatter(logging.Formatter(
-        '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
-    ))
+    file_handler.setFormatter(
+        logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+    )
     file_handler.setLevel(logging.INFO)
     app.logger.addHandler(file_handler)
     app.logger.setLevel(logging.INFO)
-    app.logger.info('App starting...')
+
+    # Database URL resolution (antifragile)
+    db_url = _resolve_database_url()
+    if not db_url:
+        raise RuntimeError(
+            "Could not resolve a database URL. Either set DATABASE_URL, or provide "
+            "LOCAL_SQL_* (development) or PA_SQL_*/pa-mysql-* (production) variables in .env."
+        )
+
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_pre_ping": True,
+        "pool_recycle": 280,  # avoid stale connections
+    }
+    app.config["UPLOAD_FOLDER"] = upload_dir
 
     # Init extensions
     db.init_app(app)
     login_manager.init_app(app)
-    login_manager.login_view = 'auth.login'
+    login_manager.login_view = "auth.login"
     socketio.init_app(app, logger=False, engineio_logger=False)
 
-    # Models (import after db)
-    from app.model.models import User, Table, MenuCategory, MenuItem, Order, OrderItem
+    # Models
+    from app.model.models import (
+        User,
+        Table,
+        MenuCategory,
+        MenuItem,
+        Order,
+        OrderItem,
+    )  # noqa
 
     with app.app_context():
         db.create_all()
@@ -59,23 +166,52 @@ def create_app():
     from app.bp.table import bp as table_bp
     from app.bp.staff import bp as staff_bp
     from app.bp.admin import bp as admin_bp
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(table_bp)
     app.register_blueprint(staff_bp)
     app.register_blueprint(admin_bp)
 
-    # PWA endpoints (served from static)
-    @app.route('/manifest.json')
+    # PWA endpoints
+    @app.route("/manifest.json")
     def manifest():
-        return send_from_directory(app.static_folder, 'manifest.json', mimetype='application/json')
+        return send_from_directory(
+            app.static_folder, "manifest.json", mimetype="application/json"
+        )
 
-    @app.route('/service-worker.js')
+    @app.route("/service-worker.js")
     def sw():
-        return send_from_directory(app.static_folder, 'service-worker.js', mimetype='application/javascript')
+        return send_from_directory(
+            app.static_folder, "service-worker.js", mimetype="application/javascript"
+        )
 
-    # A simple health check
-    @app.get('/healthz')
+    @app.get("/healthz")
     def healthz():
-        return {'status': 'ok'}
+        return {"status": "ok"}
+
+    # Log which DB we're using (passwords sanitized)
+    try:
+        sanitized = db_url
+        for secret in filter(
+            None,
+            [
+                _get_any(
+                    [
+                        "LOCAL_SQL_PASSWORD",
+                        "local-sql-user-password",
+                        "local-sql-password",
+                    ]
+                ),
+                _get_any(["PA_SQL_PASSWORD", "PA_MYSQL_PASSWORD", "pa-mysql-password"]),
+            ],
+        ):
+            sanitized = sanitized.replace(secret, "***")
+        app.logger.info(
+            "FLASK_ENV=%s • Using DB: %s",
+            _get_any(["FLASK_ENV"], "production"),
+            sanitized,
+        )
+    except Exception:
+        pass
 
     return app

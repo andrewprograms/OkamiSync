@@ -2,8 +2,16 @@
 {% block title %} - Staff{% endblock %}
 {% block content %}
 <div class="d-flex align-items-center justify-content-between mb-2">
-  <h5 class="mb-0">Staff Dashboard</h5>
-  <span class="badge bg-warning text-dark">Kitchen Live</span>
+  <h5 class="mb-0"><i class="bi bi-stack me-2"></i>Staff Dashboard</h5>
+  <div class="d-flex align-items-center gap-2">
+    <div id="orderFilter" class="btn-group btn-group-sm" role="group" aria-label="Filter orders">
+      <button type="button" class="btn btn-outline-secondary active" data-filter="active">Active</button>
+      <button type="button" class="btn btn-outline-secondary" data-filter="all">All</button>
+      <button type="button" class="btn btn-outline-secondary" data-filter="served">Served</button>
+      <button type="button" class="btn btn-outline-secondary" data-filter="cancelled">Cancelled</button>
+    </div>
+    <span class="badge bg-warning text-dark ms-2">Kitchen Live</span>
+  </div>
 </div>
 
 <div class="row g-3">
@@ -13,8 +21,8 @@
   <div class="col-12 col-lg-4">
     <div class="card">
       <div class="card-body">
-        <h6 class="mb-2">Stats (last 50)</h6>
-        <canvas id="statsChart" height="180"></canvas>
+        <h6 class="mb-2"><i class="bi bi-bar-chart-line me-2"></i>Stats (last 50)</h6>
+        <div style="height: 220px;"><canvas id="statsChart"></canvas></div>
       </div>
     </div>
   </div>

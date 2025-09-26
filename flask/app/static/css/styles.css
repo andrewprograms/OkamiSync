@@ -1,10 +1,106 @@
-/* Mobile-first diner tweaks */
-@media (min-width: 768px) {
-  .menu-card img { height: 160px; }
+/* ===== Global polish ===== */
+:root {
+  --card-radius: 0.9rem;
+}
+
+.navbar.bg-primary {
+  background-image: linear-gradient(135deg, rgba(13, 110, 253, 1) 0%, rgba(32, 201, 151, 1) 100%);
+}
+
+/* Cards */
+.card {
+  border: 0;
+  border-radius: var(--card-radius);
+  box-shadow: 0 .25rem .8rem rgba(0, 0, 0, .06);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 .5rem 1.25rem rgba(0, 0, 0, .08);
+}
+
+/* Buttons */
+.btn {
+  border-radius: .65rem;
+}
+
+/* Lists */
+.list-group-item {
+  border: 0;
+  border-radius: .6rem;
+  margin-bottom: .5rem;
+  box-shadow: 0 .15rem .5rem rgba(0, 0, 0, .04);
+}
+
+/* Utility */
+.small-muted {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+/* ===== Diner: menu cards ===== */
+.menu-card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-top-left-radius: var(--card-radius);
+  border-top-right-radius: var(--card-radius);
+}
+
+.menu-card .card-footer {
+  background: transparent;
+  border: 0;
+}
+
+.menu-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Live pulse */
+#live-badge {
+  position: relative;
+  overflow: visible;
+}
+
+#live-badge::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  border: 2px solid rgba(25, 135, 84, .35);
+  animation: pulse 1.6s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(.9);
+    opacity: .7;
+  }
+
+  70% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }
 
 /* Staff cards */
-.order-card .badge { font-size: 0.85rem; }
+.order-card .badge {
+  font-size: 0.85rem;
+}
 
-/* Utility */
-.small-muted { font-size: 0.875rem; color: #6c757d; }
+/* Mobile-first diner tweaks */
+@media (min-width: 768px) {
+  .menu-card img {
+    height: 180px;
+  }
+}
+
+/* Dark-mode fine-tuning */
+html[data-bs-theme="dark"] .list-group-item {
+  box-shadow: 0 .15rem .5rem rgba(255, 255, 255, .05);
+}
